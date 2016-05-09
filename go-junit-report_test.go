@@ -14,6 +14,7 @@ import (
 
 type TestCase struct {
 	name        string
+	verbose     bool
 	reportName  string
 	report      *parser.Report
 	noXMLHeader bool
@@ -355,7 +356,41 @@ var testCases = []TestCase{
 			},
 		},
 	},
+	{
+		name:       "12-pass-verbose.txt",
+		reportName: "12-report.xml",
+		verbose:    true,
+		report: &parser.Report{
+			Packages: []parser.Package{
+				{
+					Name: "package/name",
+					Time: 151,
+					Tests: []*parser.Test{
+						{
+							Name:   "TestOne",
+							Time:   20,
+							Result: parser.PASS,
+							Output: []string{
+								"verbose out",
+								"verbose out",
+								"verbose out",
+								"verbose out",
+							},
+						},
+						{
+							Name:   "TestTwo",
+							Time:   130,
+							Result: parser.PASS,
+							Output: []string{},
+						},
+					},
+				},
+			},
+		},
+	},
 }
+
+var verboseTestCases = []TestCase{}
 
 func TestParser(t *testing.T) {
 	for _, testCase := range testCases {
@@ -432,7 +467,7 @@ func TestJUnitFormatter(t *testing.T) {
 
 		var junitReport bytes.Buffer
 
-		if err = JUnitReportXML(testCase.report, testCase.noXMLHeader, &junitReport); err != nil {
+		if err = JUnitReportXML(testCase.report, testCase.noXMLHeader, testCase.verbose, &junitReport); err != nil {
 			t.Fatal(err)
 		}
 

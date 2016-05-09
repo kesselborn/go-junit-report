@@ -37,6 +37,7 @@ type JUnitTestCase struct {
 	Time        string            `xml:"time,attr"`
 	SkipMessage *JUnitSkipMessage `xml:"skipped,omitempty"`
 	Failure     *JUnitFailure     `xml:"failure,omitempty"`
+	SystemOut   *JUnitSystemOut   `xml:"system-out,omitempty"`
 }
 
 // JUnitSkipMessage contains the reason why a testcase was skipped.
@@ -50,6 +51,11 @@ type JUnitProperty struct {
 	Value string `xml:"value,attr"`
 }
 
+// JUnitSystemOut contains tests output.
+type JUnitSystemOut struct {
+	Contents string `xml:",chardata"`
+}
+
 // JUnitFailure contains data related to a failed test.
 type JUnitFailure struct {
 	Message  string `xml:"message,attr"`
@@ -59,7 +65,7 @@ type JUnitFailure struct {
 
 // JUnitReportXML writes a JUnit xml representation of the given report to w
 // in the format described at http://windyroad.org/dl/Open%20Source/JUnit.xsd
-func JUnitReportXML(report *parser.Report, noXMLHeader bool, w io.Writer) error {
+func JUnitReportXML(report *parser.Report, noXMLHeader bool, verbose bool, w io.Writer) error {
 	suites := JUnitTestSuites{}
 
 	// convert Report to JUnit test suites
@@ -98,6 +104,12 @@ func JUnitReportXML(report *parser.Report, noXMLHeader bool, w io.Writer) error 
 				testCase.Failure = &JUnitFailure{
 					Message:  "Failed",
 					Type:     "",
+					Contents: strings.Join(test.Output, "\n"),
+				}
+			}
+
+			if test.Result != parser.FAIL && verbose && len(test.Output) > 0 {
+				testCase.SystemOut = &JUnitSystemOut{
 					Contents: strings.Join(test.Output, "\n"),
 				}
 			}
